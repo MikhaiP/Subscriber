@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.subscriber"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.subscriber"
@@ -33,7 +33,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    packagingOptions { resources.excludes.add("META-INF/*") }
 }
+
 
 dependencies {
 

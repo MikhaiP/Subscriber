@@ -38,6 +38,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        mqttSubscriber = Subscriber(
+            brokerHost = "broker-816035889.sundaebytestt.com",
+            port = 1883,
+            topic = "assignment/location",
+            onMessageReceived = { message ->
+                Log.d("MainActivity", "Message received: $message")
+                runOnUiThread { handleIncomingMessage(message) }
+            }
+        )
+        mqttSubscriber.initializeCilent()
         mqttSubscriber.connectAndSubscribe()
     }
 
@@ -72,5 +82,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val bounds = LatLngBounds.builder()
         latLngPoints.forEach { bounds.include(it) }
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 100))
+    }
+    private fun handleIncomingMessage(message: String) {
+
+
+        val dataMap = message.split(", ").associate {
+            val (key, value) = it.split(": ")
+            key.trim() to value.trim()
+        }
+
+        val studentID = dataMap["StudentID"] ?: ""
+        val timestamp = dataMap["Time"]?.toLongOrNull() ?: System.currentTimeMillis()
+        val speed = dataMap["Speed"]?.replace(" km/h", "")?.toDoubleOrNull() ?: 0.0
+        val latitude = dataMap["Latitude"]?.toDoubleOrNull() ?: 0.0
+        val longitude = dataMap["Longitude"]?.toDoubleOrNull() ?: 0.0
+
+
+        Log.d("MQTTSubscriber", "Data saved: $message")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mqttSubscriber.disconnect()
     }
 }
