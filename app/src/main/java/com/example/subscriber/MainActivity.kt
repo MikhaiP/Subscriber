@@ -16,6 +16,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.gson.Gson
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -23,7 +24,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     val pointsList = mutableListOf<CustomMarkerPoints>()
     private lateinit var mqttSubscriber: Subscriber
 //    private var client: Mqtt5AsyncClient? = null
-
+    data class LocationData(
+        val StudentID: String,
+        val ID: String,
+        val Time: Long,
+        val Speed: String,
+        val Latitude: Double,
+        val Longitude: Double
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,12 +51,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             port = 1883,
             topic = "assignment/location",
             onMessageReceived = { message ->
-                Log.d("MainActivity", "Message received: $message")
-                runOnUiThread { handleIncomingMessage(message) }
+                Log.e("MainActivity", "Message received: $message")
+//                runOnUiThread { handleIncomingMessage(message)}
+                handleIncomingMessage(message)
             }
         )
         mqttSubscriber.initializeCilent()
+        Log.e("Initailize", "Subscriber Initialized")
         mqttSubscriber.connectAndSubscribe()
+        Log.e("Connected", "Connected and Subscribed")
     }
 
     override fun onMapReady(googleMap: GoogleMap){
@@ -86,17 +97,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun handleIncomingMessage(message: String) {
 
 
-        val dataMap = message.split(", ").associate {
-            val (key, value) = it.split(": ")
-            key.trim() to value.trim()
+//        val dataMap = message.split(", ").associate {
+//            val (key, value) = it.split(": ")
+//            key.trim() to value.trim()
+//        }
+//
+//        val studentID = dataMap["StudentID"] ?: ""
+//        val timestamp = dataMap["Time"]?.toLongOrNull() ?: System.currentTimeMillis()
+//        val speed = dataMap["Speed"]?.replace(" km/h", "")?.toDoubleOrNull() ?: 0.0
+//        val latitude = dataMap["Latitude"]?.toDoubleOrNull() ?: 0.0
+//        val longitude = dataMap["Longitude"]?.toDoubleOrNull() ?: 0.0
+        try{
+            val gson = Gson()
+
+            val locationData = gson.fromJson(message, LocationData::class.java)
+
+            // Access the fields of the LocationData object
+            Log.d("MQTTSubscriber", "Received Data: StudentID=${locationData.StudentID}, ID=${locationData.ID}, Time=${locationData.Time}, Speed=${locationData.Speed}, Latitude=${locationData.Latitude}, Longitude=${locationData.Longitude}")
+
+        } catch (e:Exception){
+            Log.e("MQTTSubscriber", "Failed to parse message as JSON: ${e.message}")
         }
-
-        val studentID = dataMap["StudentID"] ?: ""
-        val timestamp = dataMap["Time"]?.toLongOrNull() ?: System.currentTimeMillis()
-        val speed = dataMap["Speed"]?.replace(" km/h", "")?.toDoubleOrNull() ?: 0.0
-        val latitude = dataMap["Latitude"]?.toDoubleOrNull() ?: 0.0
-        val longitude = dataMap["Longitude"]?.toDoubleOrNull() ?: 0.0
-
 
         Log.d("MQTTSubscriber", "Data saved: $message")
     }

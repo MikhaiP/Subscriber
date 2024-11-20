@@ -20,12 +20,18 @@ class Subscriber(
 )  {
     private var client: Mqtt5AsyncClient? = null
 
-    fun initializeCilent(){
-        client = Mqtt5Client.builder()
-            .identifier(UUID.randomUUID().toString())
-            .serverHost("broker-816035889.sundaebytestt.com")
-            .serverPort(1883)
-            .buildAsync()
+    fun initializeCilent() {
+        if (client == null){
+            client = Mqtt5Client.builder()
+                .identifier(UUID.randomUUID().toString())
+                .serverHost("broker-816035889.sundaebytestt.com")
+                .serverPort(1883)
+                .buildAsync()
+        Log.d("MQTTSubscriber", "Client initialized")
+        } else{
+            Log.d("MQTTSubscriber", "Client already initialized")
+        }
+
     }
 
     fun connectAndSubscribe() {
@@ -36,7 +42,7 @@ class Subscriber(
                 Log.d("MQTTSubscriber", "Connected successfully")
                 subscribeToTopic()
             }
-        }
+        } ?: Log.e("MQTTSubscriber", "Client is null, cannot connect")
     }
 
     private fun subscribeToTopic() {
@@ -44,7 +50,7 @@ class Subscriber(
             ?.topicFilter("assignment/location")
             ?.callback { publish: Mqtt5Publish ->
                 val message = String(publish.payloadAsBytes, StandardCharsets.UTF_8)
-                Log.d("MQTTSubscriber", "Received message: $message")
+                Log.e("MQTTSubscriberFF", "Received message: $message")
 //                handleIncomingMessage(message)
             }
             ?.send()
@@ -54,7 +60,7 @@ class Subscriber(
                 } else {
                     Log.d("MQTTSubscriber", "Subscribed to topic successfully")
                 }
-            }
+            }?: Log.e("MQTTSubscriber", "Client is null, cannot connect")
     }
 
 //    private fun handleIncomingMessage(message: String) {
