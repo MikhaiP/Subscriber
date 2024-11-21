@@ -36,9 +36,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var client: Mqtt5AsyncClient? = null
     data class LocationData(
         val StudentID: String,
-//        val ID: String,
         val Time: Long,
-//        val Speed: String,
         val Latitude: Double,
         val Longitude: Double
     )
@@ -47,8 +45,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var lastTime: Long? = null
 
 
-
-//    private val studentMap = mutableMapOf<String, Pair<Double, Double>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,22 +63,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         databaseHelper = DatabaseHelper(this)
 
 
-//        connectAndSubscribe()
-
-//        mqttSubscriber = Subscriber(
-//            brokerHost = "broker-816035889.sundaebytestt.com",
-//            port = 1883,
-//            topic = "assignment/location",
-//            onMessageReceived = { message ->
-//                Log.e("MainActivity", "Message received: $message")
-//                runOnUiThread { handleIncomingMessage(message)}
-////                handleIncomingMessage(message)
-//            }
-//        )
-//        mqttSubscriber.initializeCilent()
-//        Log.e("Initailize", "Subscriber Initialized")
-//        mqttSubscriber.connectAndSubscribe()
-//        Log.e("Connected", "Connected and Subscribed")
     }
     private fun initializeClient() {
         if (client == null){
@@ -223,20 +203,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun handleIncomingMessage(message: String) {
 
 
-//        val dataMap = message.split(", ").associate {
-//            val (key, value) = it.split(": ")
-//            key.trim() to value.trim()
-//        }
-//
-//        val studentID = dataMap["StudentID"] ?: ""
-//        val timestamp = dataMap["Time"]?.toLongOrNull() ?: System.currentTimeMillis()
-//        val speed = dataMap["Speed"]?.replace(" km/h", "")?.toDoubleOrNull() ?: 0.0
-//        val latitude = dataMap["Latitude"]?.toDoubleOrNull() ?: 0.0
-//        val longitude = dataMap["Longitude"]?.toDoubleOrNull() ?: 0.0
-        val gson = Gson()
         try{
 
-            val locationData = gson.fromJson(message, LocationData::class.java)
+            val locationData = Gson().fromJson(message, LocationData::class.java)
 
             val latRec = locationData.Latitude
             val lonRec = locationData.Longitude
@@ -256,21 +225,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             lastLon = lonRec
             lastTime = timeRec
 
-//            val (minSpeed,maxSpeed) = studentMap[studentIDRec] ?: Pair(Double.MAX_VALUE, Double.MIN_VALUE)
-//            val newMinSpeed = minOf(minSpeed,speed)
-//            val newMaxSpeed = minOf(maxSpeed,speed)
-//            studentMap[studentIDRec] = Pair(newMinSpeed,newMaxSpeed)
+
             val speedInfo = "Speed: %.2f km/h".format(speed)
 
 
             val location = LatLng(latRec,lonRec)
+
+            // i keep getting null values when i run in UI thread using studentIDRec but when i do it like this, it
+            // sends the null value across and the actual values within it
             runOnUiThread{
+
+                addStudentToScrollView(locationData.StudentID, speedInfo)
                 addMarkerAtLocation(location)
             }
+//            runOnUiThread{
+//                addStudentToScrollView(locationData.StudentID,speedInfo)
+//            }
 
-            runOnUiThread{
-                addStudentToScrollView(studentIDRec, speedInfo)
-            }
 
 
             val rowID = databaseHelper.insertLocationData(studentIDRec, timeRec, latRec,lonRec,speed)
@@ -288,72 +259,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-//    private fun updateScrollView(studentID: String, minSpeed: Double, maxSpeed: Double) {
-//        val scrollViewLayout = findViewById<LinearLayout>(R.id.bottomScrollView).findViewById<LinearLayout>(R.id.scrollViewContainer)
-//
-//        // Check if the StudentID row already exists
-//        var existingView = scrollViewLayout.findViewWithTag<LinearLayout>(studentID)
-//
-//        if (existingView == null) {
-//            // Create a new row for this StudentID
-//            val newRow = LinearLayout(this).apply {
-//                layoutParams = LinearLayout.LayoutParams(
-//                    LinearLayout.LayoutParams.MATCH_PARENT,
-//                    LinearLayout.LayoutParams.WRAP_CONTENT
-//                )
-//                orientation = LinearLayout.HORIZONTAL
-//                setPadding(8, 8, 8, 8)
-//                setBackgroundColor(resources.getColor(android.R.color.holo_red_light))
-//                tag = studentID // Set tag to identify the row
-//            }
-//
-//            // Add Student ID TextView
-//            val studentIdView = TextView(this).apply {
-//                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-//                text = studentID
-//                setTextColor(resources.getColor(android.R.color.white))
-//                textSize = 16f
-//                id = ViewCompat.generateViewId()
-//            }
-//            newRow.addView(studentIdView)
-//
-//            // Add Speed Info TextView
-//            val speedInfoView = TextView(this).apply {
-//                layoutParams = LinearLayout.LayoutParams(
-//                    LinearLayout.LayoutParams.WRAP_CONTENT,
-//                    LinearLayout.LayoutParams.WRAP_CONTENT
-//                )
-//                setPadding(16, 0, 16, 0)
-//                text = "Min speed: $minSpeed km/h\nMax speed: $maxSpeed km/h"
-//                setTextColor(resources.getColor(android.R.color.white))
-//                textSize = 14f
-//                id = ViewCompat.generateViewId()
-//            }
-//            newRow.addView(speedInfoView)
-//
-//            // Add "View More" Button
-//            val viewMoreButton = Button(this).apply {
-//                layoutParams = LinearLayout.LayoutParams(
-//                    LinearLayout.LayoutParams.WRAP_CONTENT,
-//                    LinearLayout.LayoutParams.WRAP_CONTENT
-//                )
-//                text = "View More"
-//                textSize = 12f
-//                id = ViewCompat.generateViewId()
-//                setOnClickListener {
-//                    Toast.makeText(this@MainActivity, "Details for $studentID", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            newRow.addView(viewMoreButton)
-//
-//            // Add the new row to the ScrollView's container
-//            scrollViewLayout.addView(newRow)
-//        } else {
-//            // Update the existing row with new speed info
-//            val speedInfoView = existingView.getChildAt(1) as TextView
-//            speedInfoView.text = "Min speed: $minSpeed km/h\nMax speed: $maxSpeed km/h"
-//        }
-//    }
 
     override fun onDestroy() {
         super.onDestroy()
