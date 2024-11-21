@@ -25,6 +25,27 @@
         class="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="50dp" /> <!-- Adjust the margin based on TextView height -->
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="200dp"
+        android:layout_gravity="top"/> <!-- Adjust the margin based on TextView height -->
+
+    <ScrollView
+        android:id="@+id/bottomScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="bottom"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:id="@+id/scrollViewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+
+            <!-- Add more items dynamically in your code -->
+        </LinearLayout>
+    </ScrollView>
 
 </FrameLayout>
